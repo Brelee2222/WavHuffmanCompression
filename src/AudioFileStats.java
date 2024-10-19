@@ -20,16 +20,20 @@ public class AudioFileStats {
 
         AudioFormat format = audio.getFormat();
 
-        int frameSize = format.getFrameSize();
-        int channels = format.getChannels();
-        int sampleSize = frameSize / channels;
+        int
+                frameSize = format.getFrameSize(),
+                channels = format.getChannels(),
+                sampleSize = frameSize / channels;
 
         double[]
                 sqrSums = new double[channels],
                 sums = new double[channels];
 
+        byte[] frame = new byte[frameSize];
+
         while(audio.available() > 0) {
-            byte[] frame = audio.readNBytes(frameSize);
+            audio.read(frame);
+
             for(int channel = 0; channel < channels; channel++) {
                 int sample = 0;
 
@@ -43,15 +47,18 @@ public class AudioFileStats {
         }
 
         audio.close();
+
         long frameLength = audio.getFrameLength();
 
-        double[] means = new double[channels];
-        for(int channel = 0; channel < channels; channel++)
+        double[]
+                means = new double[channels],
+                stds = new double[channels];
+
+        for(int channel = 0; channel < channels; channel++) {
             means[channel] = sums[channel] / frameLength;
 
-        double[] stds = new double[channels];
-        for(int channel = 0; channel < channels; channel++)
             stds[channel] = Math.sqrt((sqrSums[channel] - sums[channel] * means[channel]) / frameLength + means[channel] * means[channel]);
+        }
 
         this.means = means;
         this.standardDeviations = stds;

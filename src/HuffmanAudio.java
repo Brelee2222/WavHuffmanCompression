@@ -21,7 +21,7 @@ public class HuffmanAudio {
 
         double mean = audioStats.getMean()[0];
         double std = audioStats.getStandardDeviation()[0];
-        double i = 0.1;
+        double i = 0.01;
 
         NormalDistribution nd = new NormalDistribution(mean, std);
 
@@ -48,39 +48,38 @@ public class HuffmanAudio {
                     sample |= frame[channel * sampleSize + samplePos] << (8 * samplePos);
                 }
 
-                double target = Math.round(Math.abs(sample) / std / i) * std * i;
+                double target = Math.round(sample / std / i) * std * i;
 
-                double min = 0;
-                double max = Math.ceil(32767 / std / i) * std * i;
-
+                double probMin = 0;
+                double probMax = 1;
                 double pos;
 
-                digitSum += 1;
-                double cdfMax;
-                double cdfMin;
-                double cdfPos;
+//                System.out.println(nd.cumulativeProbability(target));
+                if(target >= 8051) {
+                    System.out.println(target);
+                    System.out.println(nd.cumulativeProbability(target));
+                }
+                if(nd.cumulativeProbability(target) >= 0.999999999999999) {
+                    continue;
+                }
 
                 do {
-                    pos = min;
+                    pos = Math.floor(nd.inverseCumulativeProbability((probMin + probMax)/2.0) / std / i) * std * i;
 
-                    cdfMax = nd.cumulativeProbability(max);
-                    cdfMin = nd.cumulativeProbability(min);
+                    double newProb = nd.cumulativeProbability(pos);
 
-                    do {
-                        pos += std * i;
-                        cdfPos = nd.cumulativeProbability(pos + std * i);
-                    } while(cdfPos - cdfMin < cdfMax - cdfPos);
-
-                    if(pos < target) {
-                        min = pos;
-                    } else {
-                        max = pos;
+                    if(newProb == probMin) {
+//                        System.out.println("pp");
+                        break;
                     }
 
+                    if(target < pos) {
+                        probMax = newProb;
+                    } else {
+                        probMin = newProb;
+                    }
                     digitSum += 1;
-//                    System.out.println(Math.abs(max-min));
-                } while(Math.abs(Math.abs(max-min) - std * i) > 0.0001);
-//                System.out.println("hi");
+                } while(true);
             }
         }
 
