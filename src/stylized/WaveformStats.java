@@ -1,54 +1,45 @@
+package stylized;
+
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.UnsupportedAudioFileException;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 
-public class AudioFileStats {
-    public final File audioFile;
+@Deprecated
+public class WaveformStats {
+    private final double[] means;
+    private final double[] standardDeviations;
 
-    private double[] means;
-    private double[] standardDeviations;
-
-    public AudioFileStats(File audioFile) {
-        this.audioFile = audioFile;
-    }
-
-    public void computeStats() throws UnsupportedAudioFileException, IOException {
-        AudioInputStream audio = AudioSystem.getAudioInputStream(this.audioFile);
-
-        AudioFormat format = audio.getFormat();
+    public WaveformStats(AudioInputStream audioInput) throws IOException {
+        AudioFormat format = audioInput.getFormat();
 
         int
                 frameSize = format.getFrameSize(),
                 channels = format.getChannels(),
-                sampleSize = frameSize / channels;
+                sampleSize = format.getSampleSizeInBits();
+
+        BufferedInputStream dataInput = new BufferedInputStream(audioInput, frameSize);
 
         double[]
                 sqrSums = new double[channels],
                 sums = new double[channels];
 
-        byte[] frame = new byte[frameSize];
-
-        while(audio.available() > 0) {
-            audio.read(frame);
-
+        while(audioInput.available() > 0) {
             for(int channel = 0; channel < channels; channel++) {
                 int sample = 0;
+                for(int samplePos = 0; samplePos < sampleSize; samplePos += 8)
+                    sample |= dataInput.read() << samplePos;
 
-                for(int samplePos = 0; samplePos < sampleSize; samplePos++) {
-                    sample |= frame[channel * sampleSize + samplePos] << (8 * samplePos);
-                }
+                if (sample >> sampleSize - 1 == 1)
+                    sample |= -1 << sampleSize;
 
                 sums[channel] += sample;
                 sqrSums[channel] += (double) sample * sample;
             }
         }
 
-        audio.close();
+        audioInput.close();
 
-        long frameLength = audio.getFrameLength();
+        long frameLength = audioInput.getFrameLength();
 
         double[]
                 means = new double[channels],
