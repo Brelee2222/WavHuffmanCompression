@@ -1,7 +1,11 @@
 package huffmanstats;
 
-import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public interface ProbSearch<T extends Number> {
-    void searchValue(T value, ProbDist<T> dist, DataOutputStream output);
+    void searchValue(T value, ProbDist<T> dist, OutputStream output) throws IOException;
+
+    T unsearchValue(ProbDist<T> dist, InputStream input) throws IOException;
 }

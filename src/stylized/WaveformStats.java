@@ -49,6 +49,8 @@ public class WaveformStats {
             means[channel] = sums[channel] / frameLength;
 
             stds[channel] = Math.sqrt((sqrSums[channel] - sums[channel] * means[channel]) / frameLength + means[channel] * means[channel]);
+
+            System.out.println(stds[channel]);
         }
 
         this.means = means;

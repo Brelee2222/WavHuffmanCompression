@@ -61,9 +61,11 @@ public class HuffmanAudio {
         dataOutputStream.writeDouble(waveFormStats.getMean()[0]);
         dataOutputStream.writeDouble(waveFormStats.getStandardDeviation()[0]);
 
+        long digitSum = 0;
+
         while(audio.available() > 0) {
             byte[] frame = audio.readNBytes(frameSize);
-            for(int channel = 0; channel < channels - 1; channel++) {
+            for(int channel = 0; channel < channels; channel++) {
                 NormalDistribution nd = normalDistributions[channel];
                 int sample = 0;
 
@@ -105,6 +107,8 @@ public class HuffmanAudio {
                     } else {
                         probMin = newProb;
                     }
+
+                    digitSum++;
                 } while(true);
             }
         }
@@ -114,5 +118,8 @@ public class HuffmanAudio {
         audio.close();
 
         System.out.println("DONE");
+
+        System.out.println("Pre-Compression Value Size: " + sampleSize);
+        System.out.println("Post-Compression Value Size: " + digitSum / channels / audio.getFrameLength());
     }
 }

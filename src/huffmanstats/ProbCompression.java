@@ -1,13 +1,15 @@
 package huffmanstats;
 
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.Iterator;
 
-public abstract class ProbCompression<T extends Number> {
+@Deprecated
+public class ProbCompression<T extends Number> {
     private final ProbSearch<T> search;
     private final ProbDist<T>[] distributions;
 
-    protected ProbCompression(ProbSearch<T> search, ProbDist<T>[] distributions) {
+    public ProbCompression(ProbSearch<T> search, ProbDist<T>[] distributions) {
         this.search = search;
         this.distributions = distributions;
     }
@@ -20,18 +22,12 @@ public abstract class ProbCompression<T extends Number> {
         return this.search;
     }
 
-    void compress(Iterator<T> values, DataOutputStream output) {
+    public void compress(Iterator<T> values, DataOutputStream output) throws IOException {
         ProbDist<T>[] distributions = this.getDistributions();
         ProbSearch<T> search = this.getSearch();
 
-        int channels = distributions.length;
-        int channelIndex = 0;
-
-        while(values.hasNext()) {
-            search.searchValue(values.next(), distributions[channelIndex++], output);
-
-            if(channelIndex == channels)
-                channelIndex = 0;
+        while(values.hasNext()) for (ProbDist<T> dist : distributions) {
+            search.searchValue(values.next(), dist, output);
         }
     }
 }
